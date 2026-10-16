@@ -1,0 +1,1666 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LogikaLab — Parser & Generator Tabel Kebenaran (PJBL-1 Sesi 2)</title>
+    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap"
+        rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        surface: {
+                            50: '#fafafa',
+                            100: '#f4f4f5',
+                            200: '#e4e4e7',
+                            800: '#18181b',
+                            850: '#121215',
+                            900: '#0c0c0e',
+                            950: '#070708',
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+    <style>
+        * {
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        :root {
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        /* Subtle technical grid background */
+        .bg-tech-grid {
+            background-size: 24px 24px;
+            background-image:
+                linear-gradient(to right, rgba(120, 120, 128, 0.06) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(120, 120, 128, 0.06) 1px, transparent 1px);
+        }
+
+        /* Smooth animations */
+        .fade-enter {
+            animation: fadeSlideUp 0.28s var(--ease-out-expo) forwards;
+        }
+
+        @keyframes fadeSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Custom subtle scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(161, 161, 170, 0.25);
+            border-radius: 9999px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(161, 161, 170, 0.45);
+        }
+
+        /* Table row hover & transitions */
+        .tt-row {
+            transition: background-color 0.12s ease;
+        }
+
+        .op-btn {
+            transition: transform 0.1s var(--ease-out-expo), background-color 0.15s ease, border-color 0.15s ease;
+        }
+
+        .op-btn:active {
+            transform: scale(0.96);
+        }
+
+        /* Segmented control pill */
+        .tab-btn {
+            transition: all 0.18s var(--ease-out-expo);
+        }
+    </style>
+</head>
+
+<body
+    class="bg-surface-50 text-zinc-900 dark:bg-surface-900 dark:text-zinc-100 min-h-screen flex flex-col bg-tech-grid selection:bg-emerald-500/20 selection:text-emerald-400">
+
+    <!-- TOP NAVIGATION BAR -->
+    <header
+        class="sticky top-0 z-30 border-b border-zinc-200/80 dark:border-zinc-800/80 bg-surface-50/85 dark:bg-surface-900/85 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-3">
+            <!-- Brand / Project Identity -->
+            <div class="flex items-center gap-3 min-w-0">
+                <div
+                    class="w-8 h-8 rounded-lg bg-zinc-900 dark:bg-zinc-100 text-zinc-100 dark:text-zinc-900 flex items-center justify-center font-mono font-semibold text-sm tracking-tighter shrink-0">
+                    ⊢⊤
+                </div>
+                <div class="truncate">
+                    <div class="flex items-center gap-2">
+                        <span
+                            class="font-semibold text-sm tracking-tight text-zinc-900 dark:text-zinc-100">LogikaLab</span>
+                        <span
+                            class="text-[11px] font-mono px-1.5 py-0.5 rounded bg-zinc-200/80 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-300/60 dark:border-zinc-700/60">
+                            PJBL-1 · Sesi 2
+                        </span>
+                    </div>
+                    <p class="text-[11px] text-zinc-500 dark:text-zinc-400 truncate hidden sm:block">
+                        Parser Ekspresi Proposisional & Generator Tabel Kebenaran Otomatis
+                    </p>
+                </div>
+            </div>
+
+            <!-- Right Controls: Notation, Theme, Export -->
+            <div class="flex items-center gap-2 shrink-0">
+                <!-- Notation Selector (T/F, 1/0, B/S) -->
+                <div class="inline-flex items-center p-0.5 rounded-lg bg-zinc-200/70 dark:bg-zinc-800/90 border border-zinc-300/60 dark:border-zinc-700/60 text-xs font-mono"
+                    role="group" aria-label="Notasi Nilai">
+                    <button type="button" data-notation="TF"
+                        class="notation-btn px-2 py-1 rounded-md font-medium bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 shadow-sm">
+                        T/F
+                    </button>
+                    <button type="button" data-notation="10"
+                        class="notation-btn px-2 py-1 rounded-md font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200">
+                        1/0
+                    </button>
+                    <button type="button" data-notation="BS"
+                        class="notation-btn px-2 py-1 rounded-md font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200">
+                        B/S
+                    </button>
+                </div>
+
+                <!-- Export CSV Button -->
+                <button id="btnExportCsv" type="button"
+                    class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border border-zinc-300/80 dark:border-zinc-700/80 bg-white dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                    title="Unduh Tabel Kebenaran sebagai CSV">
+                    <svg class="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="1.75">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
+                    </svg>
+                    <span>CSV</span>
+                </button>
+
+                <!-- Theme Switcher -->
+                <button id="btnThemeToggle" type="button"
+                    class="p-1.5 rounded-lg border border-zinc-300/80 dark:border-zinc-700/80 bg-white dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                    aria-label="Ganti Tema Terang/Gelap" title="Ganti Tema">
+                    <svg id="iconSun" class="w-4 h-4 hidden dark:block" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="1.75">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    <svg id="iconMoon" class="w-4 h-4 block dark:hidden" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="1.75">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN WORKSPACE -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
+
+        <!-- EXPRESSION COMPOSER CARD -->
+        <section
+            class="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-surface-850 shadow-sm overflow-hidden">
+            <div class="p-4 sm:p-5 space-y-4">
+
+                <!-- Top row: Label & Preset Examples -->
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                        <label for="exprInput"
+                            class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                            Input Ekspresi Logika
+                        </label>
+                        <span id="liveStatusDot"
+                            class="inline-flex items-center gap-1 text-[11px] font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                            Valid
+                        </span>
+                    </div>
+
+                    <!-- Preset Selector Pills -->
+                    <div class="flex flex-wrap items-center gap-1.5">
+                        <span class="text-[11px] text-zinc-400 dark:text-zinc-500 mr-1">Preset Uji:</span>
+                        <button type="button" data-preset="p AND (q OR NOT r)"
+                            class="preset-btn text-xs font-mono px-2.5 py-1 rounded-md border border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 transition-colors">
+                            Soal Modul: p AND (q OR NOT r)
+                        </button>
+                        <button type="button" data-preset="NOT (p AND q) <-> (NOT p OR NOT q)"
+                            class="preset-btn text-xs font-mono px-2.5 py-1 rounded-md border border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 transition-colors">
+                            De Morgan (Tautologi)
+                        </button>
+                        <button type="button" data-preset="((p -> q) AND (q -> r)) -> (p -> r)"
+                            class="preset-btn text-xs font-mono px-2.5 py-1 rounded-md border border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 transition-colors">
+                            Silogisme (3 Var)
+                        </button>
+                        <button type="button" data-preset="(p OR q) AND (NOT p AND NOT q)"
+                            class="preset-btn text-xs font-mono px-2.5 py-1 rounded-md border border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 transition-colors">
+                            Kontradiksi
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Main Input Box -->
+                <div class="relative flex items-center">
+                    <div class="
+            w-full flex items-center rounded-xl border transition-all duration-150
+            bg-zinc-50/70 dark:bg-surface-900
+            border-zinc-300 dark:border-zinc-700/90
+            focus-within:border-zinc-900 dark:focus-within:border-zinc-300
+            focus-within:ring-2 focus-within:ring-zinc-900/10 dark:focus-within:ring-zinc-100/10
+          " id="inputContainer">
+                        <span class="pl-3.5 pr-2 font-mono text-zinc-400 dark:text-zinc-500 text-sm select-none">
+                            f(x) =
+                        </span>
+                        <input id="exprInput" type="text" value="p AND (q OR NOT r)" spellcheck="false"
+                            autocomplete="off"
+                            placeholder="Ketik ekspresi, misal: p AND (q OR NOT r) atau (p -> q) <-> (~q -> ~p)"
+                            class="w-full py-3 pr-3 bg-transparent font-mono text-base sm:text-lg text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-600 focus:outline-none" />
+                        <div class="flex items-center gap-1.5 pr-2.5 shrink-0">
+                            <button id="btnClearInput" type="button" title="Bersihkan Input"
+                                class="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 hover:bg-zinc-200/60 dark:hover:bg-zinc-800 transition-colors">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                    stroke-width="1.75">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                            <button id="btnEvaluate" type="button"
+                                class="px-3.5 py-1.5 rounded-lg text-xs font-medium bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 transition-colors flex items-center gap-1.5 shadow-sm">
+                                <span>Evaluasi</span>
+                                <kbd
+                                    class="hidden sm:inline-block text-[10px] font-mono opacity-75 px-1 py-0.2 bg-white/15 dark:bg-black/10 rounded">↵</kbd>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Error Banner (Hidden when valid) -->
+                <div id="errorBanner"
+                    class="hidden rounded-lg border border-rose-500/30 bg-rose-500/10 px-3.5 py-2.5 text-xs font-mono text-rose-600 dark:text-rose-400 flex items-start gap-2.5">
+                    <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                        stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4c-.77-1.33-2.69-1.33-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z" />
+                    </svg>
+                    <div class="space-y-0.5">
+                        <div class="font-semibold" id="errorTitle">Kesalahan Sintaks</div>
+                        <div id="errorDetail" class="text-rose-600/90 dark:text-rose-300/90"></div>
+                    </div>
+                </div>
+
+                <!-- Quick Operator Keypad & Options Bar -->
+                <div
+                    class="flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-zinc-100 dark:border-zinc-800/70">
+                    <!-- Operator Insert Buttons -->
+                    <div class="flex flex-wrap items-center gap-1.5">
+                        <span class="text-[11px] text-zinc-400 dark:text-zinc-500 mr-1">Sisipkan:</span>
+                        <button type="button" data-insert="p"
+                            class="op-btn px-2.5 py-1 rounded-md text-xs font-mono bg-zinc-100 dark:bg-zinc-800/90 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-200/80 dark:border-zinc-700/70">p</button>
+                        <button type="button" data-insert="q"
+                            class="op-btn px-2.5 py-1 rounded-md text-xs font-mono bg-zinc-100 dark:bg-zinc-800/90 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-200/80 dark:border-zinc-700/70">q</button>
+                        <button type="button" data-insert="r"
+                            class="op-btn px-2.5 py-1 rounded-md text-xs font-mono bg-zinc-100 dark:bg-zinc-800/90 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-200/80 dark:border-zinc-700/70">r</button>
+                        <span class="h-3.5 w-px bg-zinc-200 dark:bg-zinc-700 mx-0.5"></span>
+                        <button type="button" data-insert="NOT "
+                            class="op-btn px-2.5 py-1 rounded-md text-xs font-mono bg-zinc-100 dark:bg-zinc-800/90 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 border border-zinc-200/80 dark:border-zinc-700/70"
+                            title="Negasi (¬ / ~ / NOT)">NOT <span class="text-zinc-400">¬</span></button>
+                        <button type="button" data-insert=" AND "
+                            class="op-btn px-2.5 py-1 rounded-md text-xs font-mono bg-zinc-100 dark:bg-zinc-800/90 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 border border-zinc-200/80 dark:border-zinc-700/70"
+                            title="Konjungsi (∧ / & / AND)">AND <span class="text-zinc-400">∧</span></button>
+                        <button type="button" data-insert=" OR "
+                            class="op-btn px-2.5 py-1 rounded-md text-xs font-mono bg-zinc-100 dark:bg-zinc-800/90 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 border border-zinc-200/80 dark:border-zinc-700/70"
+                            title="Disjungsi (∨ / | / OR)">OR <span class="text-zinc-400">∨</span></button>
+                        <button type="button" data-insert=" XOR "
+                            class="op-btn px-2.5 py-1 rounded-md text-xs font-mono bg-zinc-100 dark:bg-zinc-800/90 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 border border-zinc-200/80 dark:border-zinc-700/70"
+                            title="Eksklusif OR (⊕ / XOR)">XOR <span class="text-zinc-400">⊕</span></button>
+                        <button type="button" data-insert=" -> "
+                            class="op-btn px-2.5 py-1 rounded-md text-xs font-mono bg-zinc-100 dark:bg-zinc-800/90 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 border border-zinc-200/80 dark:border-zinc-700/70"
+                            title="Implikasi (-> / IMPLIES)">→ <span class="text-zinc-400">IMP</span></button>
+                        <button type="button" data-insert=" <-> "
+                            class="op-btn px-2.5 py-1 rounded-md text-xs font-mono bg-zinc-100 dark:bg-zinc-800/90 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 border border-zinc-200/80 dark:border-zinc-700/70"
+                            title="Biimplikasi (<-> / IFF)">↔ <span class="text-zinc-400">IFF</span></button>
+                        <button type="button" data-insert="("
+                            class="op-btn px-2.5 py-1 rounded-md text-xs font-mono bg-zinc-100 dark:bg-zinc-800/90 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 border border-zinc-200/80 dark:border-zinc-700/70">(</button>
+                        <button type="button" data-insert=")"
+                            class="op-btn px-2.5 py-1 rounded-md text-xs font-mono bg-zinc-100 dark:bg-zinc-800/90 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 border border-zinc-200/80 dark:border-zinc-700/70">)</button>
+                    </div>
+
+                    <!-- Options: Sub-expressions & Order -->
+                    <div class="flex flex-wrap items-center gap-4 text-xs text-zinc-600 dark:text-zinc-400">
+                        <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+                            <input id="chkSubExpr" type="checkbox" checked
+                                class="rounded border-zinc-300 dark:border-zinc-700 text-zinc-900 focus:ring-0" />
+                            <span>Tampilkan Kolom Sub-Ekspresi</span>
+                        </label>
+                        <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+                            <input id="chkOrderDesc" type="checkbox" checked
+                                class="rounded border-zinc-300 dark:border-zinc-700 text-zinc-900 focus:ring-0" />
+                            <span>Urutan T → F</span>
+                        </label>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- TELEMETRY / MILESTONE SUMMARY STRIP (4 CARDS) -->
+        <section class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <!-- Card 1: Canonical AST Form -->
+            <div
+                class="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-surface-850 p-3.5 flex flex-col justify-between">
+                <div class="flex items-center justify-between text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
+                    <span>BENTUK KANONIK & LOGIKA</span>
+                    <span
+                        class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500">M1
+                        · M2</span>
+                </div>
+                <div class="mt-2 font-mono text-xs sm:text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate"
+                    id="metricCanonical">
+                    p ∧ (q ∨ ¬r)
+                </div>
+                <div class="mt-1 text-[11px] text-zinc-500 dark:text-zinc-400 font-mono truncate" id="metricTokenCount">
+                    8 token terdeteksi
+                </div>
+            </div>
+
+            <!-- Card 2: Detected Propositional Variables -->
+            <div
+                class="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-surface-850 p-3.5 flex flex-col justify-between">
+                <div class="flex items-center justify-between text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
+                    <span>VARIABEL PROPOSISIONAL</span>
+                    <span
+                        class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500">M3</span>
+                </div>
+                <div class="mt-2 flex items-center gap-1.5 flex-wrap" id="metricVarsList">
+                    <span
+                        class="px-2 py-0.5 rounded text-xs font-mono bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">p</span>
+                </div>
+                <div class="mt-1 text-[11px] text-zinc-500 dark:text-zinc-400" id="metricVarsCount">
+                    n = 3 variabel unik
+                </div>
+            </div>
+
+            <!-- Card 3: Combination Space 2^n -->
+            <div
+                class="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-surface-850 p-3.5 flex flex-col justify-between">
+                <div class="flex items-center justify-between text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
+                    <span>RUANG KOMBINASI (2ⁿ)</span>
+                    <span
+                        class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500">M4</span>
+                </div>
+                <div class="mt-2 font-mono text-lg font-semibold text-zinc-900 dark:text-zinc-100" id="metricCombCount">
+                    2³ = 8 Baris
+                </div>
+                <div class="mt-1 text-[11px] text-zinc-500 dark:text-zinc-400" id="metricSubExprCount">
+                    3 tahapan evaluasi
+                </div>
+            </div>
+
+            <!-- Card 4: Proposition Classification -->
+            <div
+                class="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-surface-850 p-3.5 flex flex-col justify-between">
+                <div class="flex items-center justify-between text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
+                    <span>KLASIFIKASI PROPOSISI</span>
+                    <span
+                        class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500">M5</span>
+                </div>
+                <div class="mt-2 flex items-center gap-2">
+                    <span id="metricClassBadge"
+                        class="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-semibold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/25">
+                        KONTINGENSI
+                    </span>
+                </div>
+                <div class="mt-1 text-[11px] text-zinc-500 dark:text-zinc-400 truncate" id="metricRatioText">
+                    3 Benar (37.5%) · 5 Salah (62.5%)
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW NAVIGATION TABS & MAIN PANEL -->
+        <section
+            class="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-surface-850 shadow-sm overflow-hidden">
+            <!-- Tab Bar Header -->
+            <div
+                class="px-4 sm:px-5 py-3 border-b border-zinc-200 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-3 bg-zinc-50/50 dark:bg-surface-900/40">
+                <div
+                    class="inline-flex items-center p-1 rounded-lg bg-zinc-200/70 dark:bg-zinc-800/80 border border-zinc-300/50 dark:border-zinc-700/50">
+                    <button type="button" data-tab="table"
+                        class="tab-btn px-3 py-1.5 rounded-md text-xs font-medium bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 shadow-sm">
+                        Tabel Kebenaran
+                    </button>
+                    <button type="button" data-tab="parser"
+                        class="tab-btn px-3 py-1.5 rounded-md text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200">
+                        Tokenisasi & Pohon AST
+                    </button>
+                    <button type="button" data-tab="batch"
+                        class="tab-btn px-3 py-1.5 rounded-md text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200">
+                        Uji Batch (Milestone #6)
+                    </button>
+                </div>
+
+                <!-- Contextual Controls for Table View -->
+                <div id="tableToolbar" class="flex flex-wrap items-center gap-2">
+                    <!-- Row Filter -->
+                    <div
+                        class="inline-flex items-center rounded-lg border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-800/50 p-0.5 text-xs">
+                        <button type="button" data-filter="all"
+                            class="filter-btn px-2.5 py-1 rounded-md font-medium bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900">
+                            Semua
+                        </button>
+                        <button type="button" data-filter="true"
+                            class="filter-btn px-2.5 py-1 rounded-md font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200">
+                            Hanya T
+                        </button>
+                        <button type="button" data-filter="false"
+                            class="filter-btn px-2.5 py-1 rounded-md font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200">
+                            Hanya F
+                        </button>
+                    </div>
+
+                    <!-- Copy Markdown Table -->
+                    <button id="btnCopyMarkdown" type="button"
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+                        <svg class="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor" stroke-width="1.75">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        <span>Salin Markdown</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- TAB 1: TRUTH TABLE VIEW -->
+            <div id="viewTable" class="fade-enter">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead id="ttThead"
+                            class="bg-zinc-50/90 dark:bg-zinc-900/70 border-b border-zinc-200 dark:border-zinc-800 text-xs font-mono">
+                            <!-- Populated by JS -->
+                        </thead>
+                        <tbody id="ttTbody"
+                            class="divide-y divide-zinc-200/60 dark:divide-zinc-800/70 font-mono text-xs sm:text-sm">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Table Footer Info -->
+                <div
+                    class="px-4 sm:px-5 py-3 border-t border-zinc-200/80 dark:border-zinc-800/80 bg-zinc-50/40 dark:bg-surface-900/30 flex flex-wrap items-center justify-between gap-2 text-xs text-zinc-500 dark:text-zinc-400">
+                    <div id="tableFooterSummary">
+                        Menampilkan 8 dari 8 kombinasi. Klik baris untuk menandai (highlight) saat presentasi.
+                    </div>
+                    <div class="font-mono text-[11px]">
+                        Urutan Presedensi: <span class="text-zinc-700 dark:text-zinc-300">NOT (¬) › AND (∧) › XOR (⊕) ›
+                            OR (∨) › IMPLIES (→) › IFF (↔)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: TOKENIZER & AST TREE VIEW -->
+            <div id="viewParser" class="hidden p-4 sm:p-6 space-y-6 fade-enter">
+                <!-- Section A: Lexical Token Stream -->
+                <div class="space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                                1. Lexical Analysis (Aliran Token)
+                            </h3>
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                                String ekspresi dipecah menjadi unit leksikal atomik sebelum diproses ke dalam pohon
+                                sintaks.
+                            </p>
+                        </div>
+                        <span id="tokenBadgeCount"
+                            class="font-mono text-xs px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">
+                            8 Token
+                        </span>
+                    </div>
+                    <div id="tokenStreamBox"
+                        class="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-surface-900 flex flex-wrap gap-2">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Section B: Abstract Syntax Tree (SVG Diagram + Postfix / RPN) -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <!-- Interactive SVG Tree -->
+                    <div
+                        class="lg:col-span-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-surface-900 p-4 flex flex-col">
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <h3
+                                    class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                                    2. Visualisasi Pohon Sintaks (Abstract Syntax Tree)
+                                </h3>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400">
+                                    Evaluasi dilakukan secara bottom-up dari daun (variabel) menuju akar (operator
+                                    utama).
+                                </p>
+                            </div>
+                        </div>
+                        <div id="astSvgContainer"
+                            class="flex-1 min-h-[260px] w-full flex items-center justify-center overflow-auto rounded-lg border border-zinc-200/60 dark:border-zinc-800/60 bg-white dark:bg-surface-950 p-2">
+                            <!-- SVG rendered by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Evaluation Steps & RPN Details -->
+                    <div
+                        class="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-surface-900 p-4 space-y-4 flex flex-col justify-between">
+                        <div class="space-y-3">
+                            <h3 class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                                3. Urutan Evaluasi Sub-Ekspresi
+                            </h3>
+                            <ol id="evalStepsList" class="space-y-2 text-xs font-mono">
+                                <!-- Populated by JS -->
+                            </ol>
+                        </div>
+
+                        <div class="pt-3 border-t border-zinc-200 dark:border-zinc-800 space-y-1.5">
+                            <div class="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">NOTASI POSTFIX (RPN)
+                            </div>
+                            <div id="rpnOutput"
+                                class="font-mono text-xs p-2.5 rounded-lg bg-white dark:bg-surface-950 border border-zinc-200 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200 break-all">
+                                p q r NOT OR AND
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: BATCH TEST SUITE (MILESTONE #6) -->
+            <div id="viewBatch" class="hidden p-4 sm:p-6 space-y-4 fade-enter">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                        <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                            Pengujian Otomatis Multi-Ekspresi (Milestone Pertemuan 3 — Poin 6)
+                        </h3>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400">
+                            Perbandingan langsung 3 ekspresi logika berbeda beserta deteksi variabel, jumlah baris
+                            $2^n$, dan klasifikasinya. Klik "Muat ke Tabel" untuk menginspeksi detail tiap ekspresi.
+                        </p>
+                    </div>
+                </div>
+
+                <div id="batchCardsContainer" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer
+        class="max-w-7xl w-full mx-auto px-4 sm:px-6 py-4 border-t border-zinc-200/60 dark:border-zinc-800/60 flex flex-wrap items-center justify-between gap-2 text-xs text-zinc-500 dark:text-zinc-400">
+        <div>
+            PJBL-1 Sesi ke-2 · Parser & Generator Tabel Kebenaran Otomatis
+        </div>
+        <div class="font-mono text-[11px]">
+            Mendukung: <span class="text-zinc-700 dark:text-zinc-300">AND (&, ∧), OR (|, ∨), NOT (~, !, ¬), XOR (⊕),
+                IMPLIES (->, →), IFF (<->, ↔)</span>
+        </div>
+    </footer>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toastBox"
+        class="fixed bottom-5 right-5 z-50 pointer-events-none opacity-0 translate-y-2 transition-all duration-200">
+        <div
+            class="px-3.5 py-2 rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-medium shadow-lg flex items-center gap-2 border border-zinc-700 dark:border-zinc-300">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 dark:bg-emerald-600"></span>
+            <span id="toastMessage">Tersalin ke clipboard</span>
+        </div>
+    </div>
+
+    <!-- APPLICATION LOGIC -->
+    <script>
+        (function () {
+            'use strict';
+
+            // =========================================================================
+            // 1. STATE MANAGEMENT
+            // =========================================================================
+            const state = {
+                expression: 'p AND (q OR NOT r)',
+                notation: 'TF',          // 'TF' | '10' | 'BS'
+                showSubExpressions: true,
+                descendingOrder: true,   // True -> False (standard textbook)
+                rowFilter: 'all',        // 'all' | 'true' | 'false'
+                activeTab: 'table',      // 'table' | 'parser' | 'batch'
+                highlightedRows: new Set(),
+                lastAnalysis: null
+            };
+
+            const BATCH_TEST_EXPRESSIONS = [
+                {
+                    title: 'Uji #1 — Ekspresi Modul PJBL',
+                    expr: 'p AND (q OR NOT r)',
+                    desc: 'Kombinasi konjungsi, disjungsi, dan negasi pada 3 variabel proposisional.'
+                },
+                {
+                    title: 'Uji #2 — Hukum De Morgan',
+                    expr: 'NOT (p AND q) <-> (NOT p OR NOT q)',
+                    desc: 'Pembuktian ekuivalensi logika De Morgan dengan operator biimplikasi (2 variabel).'
+                },
+                {
+                    title: 'Uji #3 — Silogisme Hipotetis',
+                    expr: '((p -> q) AND (q -> r)) -> (p -> r)',
+                    desc: 'Aturan inferensi klasik dengan implikasi bertingkat pada 3 variabel.'
+                }
+            ];
+
+            // =========================================================================
+            // 2. LEXER / TOKENIZER
+            // =========================================================================
+            const TOKEN_SPECS = [
+                { type: 'SKIP', regex: /^[ \t\r\n]+/ },
+                { type: 'IFF', regex: /^(?:<->|<=>|↔|\b(?:IFF|BICOND|EQ)\b)/i },
+                { type: 'IMPLIES', regex: /^(?:->|=>|→|\b(?:IMPLIES|IMP|THEN)\b)/i },
+                { type: 'NOT', regex: /^(?:~|!|¬|\bNOT\b)/i },
+                { type: 'AND', regex: /^(?:&&|&|\^|∧|\bAND\b)/i },
+                { type: 'XOR', regex: /^(?:⊕|\bXOR\b)/i },
+                { type: 'OR', regex: /^(?:\|\||\|+|∨|\bOR\b)/i },
+                { type: 'CONST', regex: /^\b(?:TRUE|FALSE|1|0)\b/i },
+                { type: 'LPAREN', regex: /^\(/ },
+                { type: 'RPAREN', regex: /^\)/ },
+                { type: 'VAR', regex: /^\b[a-zA-Z_][a-zA-Z0-9_]*\b/ }
+            ];
+
+            function tokenize(input) {
+                if (!input || !input.trim()) {
+                    throw new Error('Ekspresi logika masih kosong. Masukkan variabel atau operator.');
+                }
+                const tokens = [];
+                let cursor = 0;
+
+                while (cursor < input.length) {
+                    const slice = input.slice(cursor);
+                    let matched = false;
+
+                    for (const spec of TOKEN_SPECS) {
+                        const match = spec.regex.exec(slice);
+                        if (match) {
+                            matched = true;
+                            const raw = match[0];
+                            if (spec.type !== 'SKIP') {
+                                let canonical = raw;
+                                if (spec.type === 'CONST') {
+                                    canonical = /^(true|1)$/i.test(raw) ? 'TRUE' : 'FALSE';
+                                } else if (['NOT', 'AND', 'OR', 'XOR', 'IMPLIES', 'IFF'].includes(spec.type)) {
+                                    canonical = spec.type;
+                                }
+                                tokens.push({
+                                    type: spec.type,
+                                    value: canonical,
+                                    raw: raw,
+                                    pos: cursor
+                                });
+                            }
+                            cursor += raw.length;
+                            break;
+                        }
+                    }
+
+                    if (!matched) {
+                        const badChar = input[cursor];
+                        throw new Error(`Karakter tidak dikenal '${badChar}' pada posisi ke-${cursor + 1}.`);
+                    }
+                }
+
+                if (tokens.length === 0) {
+                    throw new Error('Tidak ada token valid yang ditemukan.');
+                }
+                return tokens;
+            }
+
+            // =========================================================================
+            // 3. RECURSIVE-DESCENT PARSER & AST BUILDER
+            //    Precedence: NOT > AND > XOR > OR > IMPLIES (right-assoc) > IFF
+            // =========================================================================
+            function formatCanonical(node) {
+                if (node.kind === 'VAR') return node.name;
+                if (node.kind === 'CONST') return node.value ? 'T' : 'F';
+                if (node.kind === 'UNARY') {
+                    if (node.operand.kind === 'VAR' || node.operand.kind === 'CONST') {
+                        return `NOT ${formatCanonical(node.operand)}`;
+                    }
+                    return `NOT (${formatCanonical(node.operand)})`;
+                }
+                if (node.kind === 'BINARY') {
+                    const opLabel = {
+                        AND: 'AND',
+                        OR: 'OR',
+                        XOR: 'XOR',
+                        IMPLIES: '->',
+                        IFF: '<->'
+                    }[node.op] || node.op;
+                    const leftStr = node.left.kind === 'BINARY' ? `(${formatCanonical(node.left)})` : formatCanonical(node.left);
+                    const rightStr = node.right.kind === 'BINARY' ? `(${formatCanonical(node.right)})` : formatCanonical(node.right);
+                    return `${leftStr} ${opLabel} ${rightStr}`;
+                }
+                return '';
+            }
+
+            function formatMathSymbol(node) {
+                if (node.kind === 'VAR') return node.name;
+                if (node.kind === 'CONST') return node.value ? '⊤' : '⊥';
+                if (node.kind === 'UNARY') {
+                    if (node.operand.kind === 'VAR' || node.operand.kind === 'CONST') {
+                        return `¬${formatMathSymbol(node.operand)}`;
+                    }
+                    return `¬(${formatMathSymbol(node.operand)})`;
+                }
+                if (node.kind === 'BINARY') {
+                    const opSym = {
+                        AND: '∧',
+                        OR: '∨',
+                        XOR: '⊕',
+                        IMPLIES: '→',
+                        IFF: '↔'
+                    }[node.op] || node.op;
+                    const leftStr = node.left.kind === 'BINARY' ? `(${formatMathSymbol(node.left)})` : formatMathSymbol(node.left);
+                    const rightStr = node.right.kind === 'BINARY' ? `(${formatMathSymbol(node.right)})` : formatMathSymbol(node.right);
+                    return `${leftStr} ${opSym} ${rightStr}`;
+                }
+                return '';
+            }
+
+            function parseTokens(tokens) {
+                let pos = 0;
+
+                function peek() {
+                    return pos < tokens.length ? tokens[pos] : null;
+                }
+
+                function consume(expectedType) {
+                    const tok = peek();
+                    if (!tok) {
+                        throw new Error('Ekspresi berakhir secara menggantung (kurang variabel atau kurung tutup).');
+                    }
+                    if (expectedType && tok.type !== expectedType) {
+                        throw new Error(`Diharapkan '${expectedType}', tetapi ditemukan '${tok.raw}' pada posisi ${tok.pos + 1}.`);
+                    }
+                    pos++;
+                    return tok;
+                }
+
+                function parseIff() {
+                    let node = parseImplies();
+                    while (peek() && peek().type === 'IFF') {
+                        consume('IFF');
+                        const right = parseImplies();
+                        node = { kind: 'BINARY', op: 'IFF', left: node, right };
+                    }
+                    return node;
+                }
+
+                function parseImplies() {
+                    let node = parseOr();
+                    if (peek() && peek().type === 'IMPLIES') {
+                        consume('IMPLIES');
+                        const right = parseImplies(); // Right-associative
+                        node = { kind: 'BINARY', op: 'IMPLIES', left: node, right };
+                    }
+                    return node;
+                }
+
+                function parseOr() {
+                    let node = parseXor();
+                    while (peek() && peek().type === 'OR') {
+                        consume('OR');
+                        const right = parseXor();
+                        node = { kind: 'BINARY', op: 'OR', left: node, right };
+                    }
+                    return node;
+                }
+
+                function parseXor() {
+                    let node = parseAnd();
+                    while (peek() && peek().type === 'XOR') {
+                        consume('XOR');
+                        const right = parseAnd();
+                        node = { kind: 'BINARY', op: 'XOR', left: node, right };
+                    }
+                    return node;
+                }
+
+                function parseAnd() {
+                    let node = parseNot();
+                    while (peek() && peek().type === 'AND') {
+                        consume('AND');
+                        const right = parseNot();
+                        node = { kind: 'BINARY', op: 'AND', left: node, right };
+                    }
+                    return node;
+                }
+
+                function parseNot() {
+                    if (peek() && peek().type === 'NOT') {
+                        consume('NOT');
+                        return { kind: 'UNARY', op: 'NOT', operand: parseNot() };
+                    }
+                    return parseAtom();
+                }
+
+                function parseAtom() {
+                    const tok = peek();
+                    if (!tok) {
+                        throw new Error('Diharapkan variabel proposisional atau tanda kurung, tetapi ekspresi habis.');
+                    }
+                    if (tok.type === 'LPAREN') {
+                        consume('LPAREN');
+                        if (peek() && peek().type === 'RPAREN') {
+                            throw new Error(`Tanda kurung kosong '()' pada posisi ${tok.pos + 1}.`);
+                        }
+                        const inside = parseIff();
+                        if (!peek() || peek().type !== 'RPAREN') {
+                            throw new Error(`Kurung buka '(' pada posisi ${tok.pos + 1} belum ditutup dengan ')'.`);
+                        }
+                        consume('RPAREN');
+                        return inside;
+                    }
+                    if (tok.type === 'VAR') {
+                        consume('VAR');
+                        return { kind: 'VAR', name: tok.value };
+                    }
+                    if (tok.type === 'CONST') {
+                        consume('CONST');
+                        return { kind: 'CONST', value: tok.value === 'TRUE' };
+                    }
+                    if (tok.type === 'RPAREN') {
+                        throw new Error(`Kurung tutup ')' berlebih pada posisi ${tok.pos + 1}.`);
+                    }
+                    throw new Error(`Operator '${tok.raw}' pada posisi ${tok.pos + 1} tidak memiliki operan kiri yang valid.`);
+                }
+
+                const root = parseIff();
+                if (pos < tokens.length) {
+                    const extra = tokens[pos];
+                    throw new Error(`Token '${extra.raw}' pada posisi ${extra.pos + 1} tidak terhubung dengan operator.`);
+                }
+                return root;
+            }
+
+            // =========================================================================
+            // 4. AST UTILITIES: VARIABLES, SUBEXPRESSIONS, RPN, EVALUATION
+            // =========================================================================
+            function extractVariables(node, set = new Set()) {
+                if (!node) return set;
+                if (node.kind === 'VAR') set.add(node.name);
+                else if (node.kind === 'UNARY') extractVariables(node.operand, set);
+                else if (node.kind === 'BINARY') {
+                    extractVariables(node.left, set);
+                    extractVariables(node.right, set);
+                }
+                return set;
+            }
+
+            function collectSubExpressions(node, list = [], seen = new Set()) {
+                if (!node) return list;
+                if (node.kind === 'UNARY') {
+                    collectSubExpressions(node.operand, list, seen);
+                    const label = formatCanonical(node);
+                    if (!seen.has(label)) {
+                        seen.add(label);
+                        list.push({ node, label, mathLabel: formatMathSymbol(node) });
+                    }
+                } else if (node.kind === 'BINARY') {
+                    collectSubExpressions(node.left, list, seen);
+                    collectSubExpressions(node.right, list, seen);
+                    const label = formatCanonical(node);
+                    if (!seen.has(label)) {
+                        seen.add(label);
+                        list.push({ node, label, mathLabel: formatMathSymbol(node) });
+                    }
+                }
+                return list;
+            }
+
+            function toPostfixRPN(node) {
+                if (node.kind === 'VAR') return [node.name];
+                if (node.kind === 'CONST') return [node.value ? 'TRUE' : 'FALSE'];
+                if (node.kind === 'UNARY') return [...toPostfixRPN(node.operand), node.op];
+                if (node.kind === 'BINARY') return [...toPostfixRPN(node.left), ...toPostfixRPN(node.right), node.op];
+                return [];
+            }
+
+            function evaluateAST(node, env) {
+                if (node.kind === 'VAR') return Boolean(env[node.name]);
+                if (node.kind === 'CONST') return Boolean(node.value);
+                if (node.kind === 'UNARY') {
+                    return !evaluateAST(node.operand, env);
+                }
+                if (node.kind === 'BINARY') {
+                    const l = evaluateAST(node.left, env);
+                    const r = evaluateAST(node.right, env);
+                    switch (node.op) {
+                        case 'AND': return l && r;
+                        case 'OR': return l || r;
+                        case 'XOR': return l !== r;
+                        case 'IMPLIES': return (!l) || r;
+                        case 'IFF': return l === r;
+                        default: return false;
+                    }
+                }
+                return false;
+            }
+
+            function analyzeExpression(exprString, descending = true) {
+                const tokens = tokenize(exprString);
+                const ast = parseTokens(tokens);
+
+                const variables = Array.from(extractVariables(ast)).sort((a, b) =>
+                    a.toLowerCase().localeCompare(b.toLowerCase()) || a.localeCompare(b)
+                );
+
+                let subExpressions = collectSubExpressions(ast);
+                if (subExpressions.length === 0) {
+                    subExpressions = [{
+                        node: ast,
+                        label: formatCanonical(ast),
+                        mathLabel: formatMathSymbol(ast)
+                    }];
+                }
+
+                const n = variables.length;
+                const totalRows = Math.pow(2, n);
+                const rows = [];
+                let trueCount = 0;
+
+                for (let i = 0; i < totalRows; i++) {
+                    const env = {};
+                    for (let vIdx = 0; vIdx < n; vIdx++) {
+                        const bit = (i >> (n - 1 - vIdx)) & 1;
+                        env[variables[vIdx]] = descending ? (bit === 0) : (bit === 1);
+                    }
+
+                    const subValues = subExpressions.map(sub => evaluateAST(sub.node, env));
+                    const finalVal = evaluateAST(ast, env);
+                    if (finalVal) trueCount++;
+
+                    rows.push({
+                        index: i + 1,
+                        env,
+                        subValues,
+                        finalVal
+                    });
+                }
+
+                const falseCount = totalRows - trueCount;
+                let classification = 'KONTINGENSI';
+                if (trueCount === totalRows) classification = 'TAUTOLOGI';
+                else if (trueCount === 0) classification = 'KONTRADIKSI';
+
+                return {
+                    raw: exprString,
+                    tokens,
+                    ast,
+                    canonical: formatCanonical(ast),
+                    mathCanonical: formatMathSymbol(ast),
+                    rpn: toPostfixRPN(ast).join(' '),
+                    variables,
+                    subExpressions,
+                    rows,
+                    totalRows,
+                    trueCount,
+                    falseCount,
+                    classification
+                };
+            }
+
+            // =========================================================================
+            // 5. FORMATTING HELPERS
+            // =========================================================================
+            function formatBoolText(val, notation) {
+                if (notation === '10') return val ? '1' : '0';
+                if (notation === 'BS') return val ? 'B' : 'S';
+                return val ? 'T' : 'F';
+            }
+
+            function showToast(msg) {
+                const box = document.getElementById('toastBox');
+                const label = document.getElementById('toastMessage');
+                label.textContent = msg;
+                box.classList.remove('opacity-0', 'translate-y-2');
+                box.classList.add('opacity-100', 'translate-y-0');
+                if (window._toastTimer) clearTimeout(window._toastTimer);
+                window._toastTimer = setTimeout(() => {
+                    box.classList.add('opacity-0', 'translate-y-2');
+                    box.classList.remove('opacity-100', 'translate-y-0');
+                }, 2200);
+            }
+
+            function copyTextToClipboard(text, successMsg) {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).then(() => {
+                        showToast(successMsg);
+                    }).catch(() => fallbackCopy(text, successMsg));
+                } else {
+                    fallbackCopy(text, successMsg);
+                }
+            }
+
+            function fallbackCopy(text, successMsg) {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                try {
+                    document.execCommand('copy');
+                    showToast(successMsg);
+                } catch (e) {
+                    showToast('Gagal menyalin teks');
+                }
+                document.body.removeChild(ta);
+            }
+
+            // =========================================================================
+            // 6. SVG AST TREE RENDERER
+            // =========================================================================
+            function renderASTSvg(ast) {
+                // Compute tree layout widths and coordinates
+                let leafCounter = 0;
+                let maxDepth = 0;
+
+                function assignLayout(node, depth) {
+                    if (depth > maxDepth) maxDepth = depth;
+                    if (node.kind === 'VAR' || node.kind === 'CONST') {
+                        const x = leafCounter * 96 + 60;
+                        leafCounter++;
+                        return {
+                            node,
+                            label: node.kind === 'VAR' ? node.name : (node.value ? 'T' : 'F'),
+                            kind: node.kind,
+                            x,
+                            y: depth * 74 + 42,
+                            children: []
+                        };
+                    }
+                    if (node.kind === 'UNARY') {
+                        const child = assignLayout(node.operand, depth + 1);
+                        return {
+                            node,
+                            label: 'NOT (¬)',
+                            kind: 'UNARY',
+                            x: child.x,
+                            y: depth * 74 + 42,
+                            children: [child]
+                        };
+                    }
+                    if (node.kind === 'BINARY') {
+                        const left = assignLayout(node.left, depth + 1);
+                        const right = assignLayout(node.right, depth + 1);
+                        const opMap = { AND: 'AND (∧)', OR: 'OR (∨)', XOR: 'XOR (⊕)', IMPLIES: 'IMP (→)', IFF: 'IFF (↔)' };
+                        return {
+                            node,
+                            label: opMap[node.op] || node.op,
+                            kind: 'BINARY',
+                            x: (left.x + right.x) / 2,
+                            y: depth * 74 + 42,
+                            children: [left, right]
+                        };
+                    }
+                }
+
+                const rootLayout = assignLayout(ast, 0);
+                const width = Math.max(leafCounter * 96 + 40, 320);
+                const height = Math.max((maxDepth + 1) * 74 + 24, 180);
+
+                const edges = [];
+                const nodes = [];
+
+                function collectRenderables(item) {
+                    for (const child of item.children) {
+                        edges.push({ x1: item.x, y1: item.y, x2: child.x, y2: child.y });
+                        collectRenderables(child);
+                    }
+                    nodes.push(item);
+                }
+                collectRenderables(rootLayout);
+
+                const isDark = document.documentElement.classList.contains('dark');
+                const strokeColor = isDark ? '#3f3f46' : '#d4d4d8';
+
+                let svg = `<svg viewBox="0 0 ${width} ${height}" class="w-full h-full max-h-[340px]" xmlns="http://www.w3.org/2000/svg">`;
+
+                // Edges
+                for (const e of edges) {
+                    const midY = (e.y1 + e.y2) / 2;
+                    svg += `<path d="M ${e.x1} ${e.y1 + 14} C ${e.x1} ${midY}, ${e.x2} ${midY}, ${e.x2} ${e.y2 - 14}" fill="none" stroke="${strokeColor}" stroke-width="1.5" />`;
+                }
+
+                // Nodes
+                for (const n of nodes) {
+                    const boxW = Math.max(n.label.length * 7.5 + 22, 44);
+                    const boxH = 28;
+                    const rx = n.x - boxW / 2;
+                    const ry = n.y - boxH / 2;
+
+                    let fill = isDark ? '#18181b' : '#ffffff';
+                    let border = isDark ? '#3f3f46' : '#d4d4d8';
+                    let textFill = isDark ? '#f4f4f5' : '#18181b';
+
+                    if (n.kind === 'VAR') {
+                        fill = isDark ? '#064e3b' : '#ecfdf5';
+                        border = isDark ? '#059669' : '#34d399';
+                        textFill = isDark ? '#6ee7b7' : '#065f46';
+                    } else if (n.kind === 'UNARY') {
+                        fill = isDark ? '#3f1d2e' : '#fff1f2';
+                        border = isDark ? '#e11d48' : '#fda4af';
+                        textFill = isDark ? '#fda4af' : '#9f1239';
+                    } else if (n.kind === 'BINARY') {
+                        fill = isDark ? '#27272a' : '#f4f4f5';
+                        border = isDark ? '#52525b' : '#a1a1aa';
+                        textFill = isDark ? '#e4e4e7' : '#18181b';
+                    }
+
+                    svg += `
+            <g>
+              <rect x="${rx}" y="${ry}" width="${boxW}" height="${boxH}" rx="7" fill="${fill}" stroke="${border}" stroke-width="1.25" />
+              <text x="${n.x}" y="${n.y + 4}" text-anchor="middle" fill="${textFill}" font-family="JetBrains Mono, monospace" font-size="11" font-weight="600">${n.label}</text>
+            </g>
+          `;
+                }
+
+                svg += `</svg>`;
+                return svg;
+            }
+
+            // =========================================================================
+            // 7. UI RENDERING
+            // =========================================================================
+            function renderAll() {
+                const inputEl = document.getElementById('exprInput');
+                const liveDot = document.getElementById('liveStatusDot');
+                const errorBanner = document.getElementById('errorBanner');
+                const errorDetail = document.getElementById('errorDetail');
+                const inputContainer = document.getElementById('inputContainer');
+
+                state.expression = inputEl.value;
+
+                try {
+                    const analysis = analyzeExpression(state.expression, state.descendingOrder);
+                    state.lastAnalysis = analysis;
+
+                    // Valid state styling
+                    errorBanner.classList.add('hidden');
+                    inputContainer.classList.remove('border-rose-500', 'dark:border-rose-500');
+                    liveDot.className = 'inline-flex items-center gap-1 text-[11px] font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full';
+                    liveDot.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Valid';
+
+                    renderMetrics(analysis);
+                    renderTruthTable(analysis);
+                    renderParserInspector(analysis);
+                } catch (err) {
+                    // Error state styling
+                    errorBanner.classList.remove('hidden');
+                    errorDetail.textContent = err.message;
+                    inputContainer.classList.add('border-rose-500', 'dark:border-rose-500');
+                    liveDot.className = 'inline-flex items-center gap-1 text-[11px] font-mono text-rose-600 dark:text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-full';
+                    liveDot.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>Sintaks Belum Lengkap';
+                }
+            }
+
+            function renderMetrics(analysis) {
+                document.getElementById('metricCanonical').textContent = `${analysis.canonical}  (${analysis.mathCanonical})`;
+                document.getElementById('metricTokenCount').textContent = `${analysis.tokens.length} token terdeteksi`;
+
+                const varsContainer = document.getElementById('metricVarsList');
+                if (analysis.variables.length === 0) {
+                    varsContainer.innerHTML = '<span class="text-xs font-mono text-zinc-400">(Konstanta saja)</span>';
+                } else {
+                    varsContainer.innerHTML = analysis.variables.map(v =>
+                        `<span class="px-2 py-0.5 rounded text-xs font-mono font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-200/80 dark:border-zinc-700/80">${v}</span>`
+                    ).join('');
+                }
+                document.getElementById('metricVarsCount').textContent = `n = ${analysis.variables.length} variabel proposisional`;
+
+                const superscripts = { '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹' };
+                const supStr = String(analysis.variables.length).split('').map(c => superscripts[c] || c).join('');
+                document.getElementById('metricCombCount').textContent = `2${supStr} = ${analysis.totalRows} Baris`;
+                document.getElementById('metricSubExprCount').textContent = `${analysis.subExpressions.length} tahapan evaluasi`;
+
+                const badge = document.getElementById('metricClassBadge');
+                badge.textContent = analysis.classification;
+                if (analysis.classification === 'TAUTOLOGI') {
+                    badge.className = 'inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25';
+                } else if (analysis.classification === 'KONTRADIKSI') {
+                    badge.className = 'inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-semibold bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/25';
+                } else {
+                    badge.className = 'inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-semibold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/25';
+                }
+
+                const tPct = Math.round((analysis.trueCount / analysis.totalRows) * 1000) / 10;
+                const fPct = Math.round((analysis.falseCount / analysis.totalRows) * 1000) / 10;
+                const tLabel = formatBoolText(true, state.notation);
+                const fLabel = formatBoolText(false, state.notation);
+                document.getElementById('metricRatioText').textContent = `${analysis.trueCount} ${tLabel} (${tPct}%) · ${analysis.falseCount} ${fLabel} (${fPct}%)`;
+            }
+
+            function renderTruthTable(analysis) {
+                const thead = document.getElementById('ttThead');
+                const tbody = document.getElementById('ttTbody');
+
+                const subsToRender = state.showSubExpressions
+                    ? analysis.subExpressions
+                    : [analysis.subExpressions[analysis.subExpressions.length - 1]];
+
+                // Build header row
+                let headHtml = '<tr>';
+                headHtml += '<th class="py-2.5 px-3 text-center text-[11px] font-medium text-zinc-400 dark:text-zinc-500 w-12 border-r border-zinc-200/70 dark:border-zinc-800">#</th>';
+
+                for (const v of analysis.variables) {
+                    headHtml += `<th class="py-2.5 px-4 text-center font-semibold text-zinc-800 dark:text-zinc-200 bg-zinc-100/70 dark:bg-zinc-800/40 border-r border-zinc-200/70 dark:border-zinc-800">${v}</th>`;
+                }
+
+                subsToRender.forEach((sub, idx) => {
+                    const isFinal = idx === subsToRender.length - 1;
+                    if (isFinal) {
+                        headHtml += `<th class="py-2.5 px-4 text-center font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 dark:bg-emerald-500/10">${sub.label}</th>`;
+                    } else {
+                        headHtml += `<th class="py-2.5 px-4 text-center font-medium text-zinc-600 dark:text-zinc-400 border-r border-zinc-200/70 dark:border-zinc-800">${sub.label}</th>`;
+                    }
+                });
+                headHtml += '</tr>';
+                thead.innerHTML = headHtml;
+
+                // Filter rows
+                const filteredRows = analysis.rows.filter(r => {
+                    if (state.rowFilter === 'true') return r.finalVal === true;
+                    if (state.rowFilter === 'false') return r.finalVal === false;
+                    return true;
+                });
+
+                if (filteredRows.length === 0) {
+                    const colSpan = 1 + analysis.variables.length + subsToRender.length;
+                    tbody.innerHTML = `<tr><td colspan="${colSpan}" class="py-8 text-center text-xs text-zinc-400">Tidak ada baris kombinasi untuk filter ini.</td></tr>`;
+                } else {
+                    let bodyHtml = '';
+                    for (const row of filteredRows) {
+                        const isHighlighted = state.highlightedRows.has(row.index);
+                        const rowBg = isHighlighted
+                            ? 'bg-amber-500/10 dark:bg-amber-500/15'
+                            : 'hover:bg-zinc-100/70 dark:hover:bg-zinc-800/40';
+
+                        bodyHtml += `<tr data-row-idx="${row.index}" class="tt-row cursor-pointer ${rowBg}">`;
+                        bodyHtml += `<td class="py-2 px-3 text-center text-xs text-zinc-400 dark:text-zinc-500 border-r border-zinc-200/60 dark:border-zinc-800/70">${row.index}</td>`;
+
+                        // Variable cells
+                        for (const v of analysis.variables) {
+                            const val = row.env[v];
+                            const badgeCls = val
+                                ? 'text-zinc-900 dark:text-zinc-100 font-semibold'
+                                : 'text-zinc-400 dark:text-zinc-500';
+                            bodyHtml += `<td class="py-2 px-4 text-center border-r border-zinc-200/60 dark:border-zinc-800/70 ${badgeCls}">${formatBoolText(val, state.notation)}</td>`;
+                        }
+
+                        // Subexpression cells
+                        if (state.showSubExpressions) {
+                            row.subValues.forEach((val, idx) => {
+                                const isFinal = idx === row.subValues.length - 1;
+                                if (isFinal) {
+                                    const pill = val
+                                        ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
+                                        : 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30';
+                                    bodyHtml += `<td class="py-2 px-4 text-center bg-emerald-500/[0.03] dark:bg-emerald-500/[0.04]"><span class="inline-block w-7 py-0.5 rounded text-xs font-semibold border ${pill}">${formatBoolText(val, state.notation)}</span></td>`;
+                                } else {
+                                    const cellCls = val
+                                        ? 'text-emerald-600 dark:text-emerald-400 font-medium'
+                                        : 'text-zinc-400 dark:text-zinc-500';
+                                    bodyHtml += `<td class="py-2 px-4 text-center border-r border-zinc-200/60 dark:border-zinc-800/70 ${cellCls}">${formatBoolText(val, state.notation)}</td>`;
+                                }
+                            });
+                        } else {
+                            const val = row.finalVal;
+                            const pill = val
+                                ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
+                                : 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30';
+                            bodyHtml += `<td class="py-2 px-4 text-center bg-emerald-500/[0.03] dark:bg-emerald-500/[0.04]"><span class="inline-block w-7 py-0.5 rounded text-xs font-semibold border ${pill}">${formatBoolText(val, state.notation)}</span></td>`;
+                        }
+
+                        bodyHtml += '</tr>';
+                    }
+                    tbody.innerHTML = bodyHtml;
+                }
+
+                document.getElementById('tableFooterSummary').textContent =
+                    `Menampilkan ${filteredRows.length} dari ${analysis.totalRows} baris kombinasi (2^${analysis.variables.length}). Klik baris mana saja untuk menandai saat presentasi.`;
+            }
+
+            function renderParserInspector(analysis) {
+                document.getElementById('tokenBadgeCount').textContent = `${analysis.tokens.length} Token`;
+
+                // Render tokens
+                const streamBox = document.getElementById('tokenStreamBox');
+                streamBox.innerHTML = analysis.tokens.map((t, i) => {
+                    let colorCls = 'bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300';
+                    if (t.type === 'VAR') {
+                        colorCls = 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300';
+                    } else if (t.type === 'NOT') {
+                        colorCls = 'bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-300';
+                    } else if (['AND', 'OR', 'XOR', 'IMPLIES', 'IFF'].includes(t.type)) {
+                        colorCls = 'bg-sky-500/10 border-sky-500/30 text-sky-700 dark:text-sky-300';
+                    }
+
+                    return `
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-mono ${colorCls}">
+              <span class="text-[10px] opacity-60">#${i + 1} ${t.type}</span>
+              <span class="font-semibold">'${t.value}'</span>
+            </div>
+          `;
+                }).join('');
+
+                // Render SVG AST
+                document.getElementById('astSvgContainer').innerHTML = renderASTSvg(analysis.ast);
+
+                // Render Evaluation steps
+                const stepsEl = document.getElementById('evalStepsList');
+                stepsEl.innerHTML = analysis.subExpressions.map((sub, idx) => {
+                    const isFinal = idx === analysis.subExpressions.length - 1;
+                    return `
+            <li class="p-2 rounded-lg border ${isFinal ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-semibold' : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-surface-950 text-zinc-700 dark:text-zinc-300'} flex items-center justify-between gap-2">
+              <span>Tahap ${idx + 1}: ${sub.label}</span>
+              <span class="text-[11px] opacity-75">${sub.mathLabel}</span>
+            </li>
+          `;
+                }).join('');
+
+                document.getElementById('rpnOutput').textContent = analysis.rpn;
+            }
+
+            function renderBatchSuite() {
+                const container = document.getElementById('batchCardsContainer');
+                container.innerHTML = BATCH_TEST_EXPRESSIONS.map((item, idx) => {
+                    const res = analyzeExpression(item.expr, state.descendingOrder);
+                    let badgeCls = 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30';
+                    if (res.classification === 'TAUTOLOGI') {
+                        badgeCls = 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30';
+                    } else if (res.classification === 'KONTRADIKSI') {
+                        badgeCls = 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30';
+                    }
+
+                    // Mini preview rows (up to 4 rows)
+                    const previewRows = res.rows.slice(0, 4).map(r => {
+                        const varsStr = res.variables.map(v => `${v}=${formatBoolText(r.env[v], state.notation)}`).join(', ');
+                        const outStr = formatBoolText(r.finalVal, state.notation);
+                        return `<div class="flex items-center justify-between text-[11px] py-1 border-b border-zinc-100 dark:border-zinc-800/60 last:border-0">
+              <span class="text-zinc-500 dark:text-zinc-400">${varsStr}</span>
+              <span class="font-semibold ${r.finalVal ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">→ ${outStr}</span>
+            </div>`;
+                    }).join('');
+
+                    return `
+            <div class="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-surface-900 p-4 flex flex-col justify-between space-y-4">
+              <div class="space-y-2">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-xs font-semibold text-zinc-900 dark:text-zinc-100">${item.title}</span>
+                  <span class="px-2 py-0.5 rounded text-[10px] font-mono font-semibold border ${badgeCls}">${res.classification}</span>
+                </div>
+                <div class="p-2.5 rounded-lg bg-white dark:bg-surface-950 border border-zinc-200 dark:border-zinc-800 font-mono text-xs text-zinc-900 dark:text-zinc-100 break-all">
+                  ${item.expr}
+                </div>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400">${item.desc}</p>
+                <div class="grid grid-cols-2 gap-2 pt-1 text-[11px] font-mono">
+                  <div class="p-2 rounded bg-white dark:bg-surface-950 border border-zinc-200/70 dark:border-zinc-800">
+                    <span class="text-zinc-400 block">Variabel</span>
+                    <span class="text-zinc-800 dark:text-zinc-200 font-semibold">${res.variables.join(', ')} (n=${res.variables.length})</span>
+                  </div>
+                  <div class="p-2 rounded bg-white dark:bg-surface-950 border border-zinc-200/70 dark:border-zinc-800">
+                    <span class="text-zinc-400 block">Kombinasi</span>
+                    <span class="text-zinc-800 dark:text-zinc-200 font-semibold">2^${res.variables.length} = ${res.totalRows} baris</span>
+                  </div>
+                </div>
+                <div class="pt-2">
+                  <div class="text-[10px] font-mono uppercase text-zinc-400 mb-1">Sampel Evaluasi Baris:</div>
+                  <div class="font-mono bg-white dark:bg-surface-950 rounded-lg p-2 border border-zinc-200/70 dark:border-zinc-800">
+                    ${previewRows}
+                  </div>
+                </div>
+              </div>
+
+              <button type="button" data-load-expr="${item.expr}" class="batch-load-btn w-full py-2 px-3 rounded-lg text-xs font-medium bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 transition-colors">
+                Muat & Inspeksi Tabel Lengkap →
+              </button>
+            </div>
+          `;
+                }).join('');
+            }
+
+            // =========================================================================
+            // 8. EXPORT & MARKDOWN BUILDERS
+            // =========================================================================
+            function buildMarkdownTable(analysis) {
+                const subs = state.showSubExpressions
+                    ? analysis.subExpressions
+                    : [analysis.subExpressions[analysis.subExpressions.length - 1]];
+                const headers = ['No', ...analysis.variables, ...subs.map(s => s.label)];
+                const sep = headers.map(() => ':---:');
+                const lines = [
+                    `| ${headers.join(' | ')} |`,
+                    `| ${sep.join(' | ')} |`
+                ];
+                for (const r of analysis.rows) {
+                    const varCells = analysis.variables.map(v => formatBoolText(r.env[v], state.notation));
+                    const subCells = state.showSubExpressions
+                        ? r.subValues.map(val => formatBoolText(val, state.notation))
+                        : [formatBoolText(r.finalVal, state.notation)];
+                    lines.push(`| ${r.index} | ${[...varCells, ...subCells].join(' | ')} |`);
+                }
+                return lines.join('\n');
+            }
+
+            function downloadCsv(analysis) {
+                const subs = state.showSubExpressions
+                    ? analysis.subExpressions
+                    : [analysis.subExpressions[analysis.subExpressions.length - 1]];
+                const headers = ['No', ...analysis.variables, ...subs.map(s => `"${s.label}"`)];
+                const csvLines = [headers.join(',')];
+                for (const r of analysis.rows) {
+                    const varCells = analysis.variables.map(v => formatBoolText(r.env[v], state.notation));
+                    const subCells = state.showSubExpressions
+                        ? r.subValues.map(val => formatBoolText(val, state.notation))
+                        : [formatBoolText(r.finalVal, state.notation)];
+                    csvLines.push([r.index, ...varCells, ...subCells].join(','));
+                }
+                const blob = new Blob([csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'tabel_kebenaran_pjbl1.csv';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast('File CSV berhasil diunduh');
+            }
+
+            // =========================================================================
+            // 9. EVENT LISTENERS & INTERACTION BINDINGS
+            // =========================================================================
+            function switchTab(tabName) {
+                state.activeTab = tabName;
+                const views = {
+                    table: document.getElementById('viewTable'),
+                    parser: document.getElementById('viewParser'),
+                    batch: document.getElementById('viewBatch')
+                };
+                const toolbar = document.getElementById('tableToolbar');
+
+                Object.keys(views).forEach(k => {
+                    if (k === tabName) views[k].classList.remove('hidden');
+                    else views[k].classList.add('hidden');
+                });
+
+                if (tabName === 'table') toolbar.classList.remove('hidden');
+                else toolbar.classList.add('hidden');
+
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    if (btn.dataset.tab === tabName) {
+                        btn.className = 'tab-btn px-3 py-1.5 rounded-md text-xs font-medium bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 shadow-sm';
+                    } else {
+                        btn.className = 'tab-btn px-3 py-1.5 rounded-md text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200';
+                    }
+                });
+
+                if (tabName === 'batch') {
+                    renderBatchSuite();
+                } else if (tabName === 'parser' && state.lastAnalysis) {
+                    renderParserInspector(state.lastAnalysis);
+                }
+            }
+
+            window.addEventListener('DOMContentLoaded', () => {
+                const inputEl = document.getElementById('exprInput');
+
+                // Live input evaluation
+                inputEl.addEventListener('input', () => {
+                    state.highlightedRows.clear();
+                    renderAll();
+                });
+
+                inputEl.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        renderAll();
+                        showToast('Ekspresi dievaluasi');
+                    }
+                });
+
+                document.getElementById('btnEvaluate').addEventListener('click', () => {
+                    renderAll();
+                    showToast('Ekspresi dievaluasi');
+                });
+
+                document.getElementById('btnClearInput').addEventListener('click', () => {
+                    inputEl.value = '';
+                    state.highlightedRows.clear();
+                    inputEl.focus();
+                    renderAll();
+                });
+
+                // Operator keypad insertion at cursor
+                document.querySelectorAll('[data-insert]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const snippet = btn.getAttribute('data-insert');
+                        const start = inputEl.selectionStart || inputEl.value.length;
+                        const end = inputEl.selectionEnd || inputEl.value.length;
+                        const before = inputEl.value.slice(0, start);
+                        const after = inputEl.value.slice(end);
+                        inputEl.value = before + snippet + after;
+                        const nextPos = start + snippet.length;
+                        inputEl.focus();
+                        inputEl.setSelectionRange(nextPos, nextPos);
+                        renderAll();
+                    });
+                });
+
+                // Preset buttons
+                document.querySelectorAll('.preset-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        inputEl.value = btn.getAttribute('data-preset');
+                        state.highlightedRows.clear();
+                        renderAll();
+                        showToast('Preset ekspresi dimuat');
+                    });
+                });
+
+                // Checkboxes
+                document.getElementById('chkSubExpr').addEventListener('change', (e) => {
+                    state.showSubExpressions = e.target.checked;
+                    renderAll();
+                });
+
+                document.getElementById('chkOrderDesc').addEventListener('change', (e) => {
+                    state.descendingOrder = e.target.checked;
+                    renderAll();
+                    if (state.activeTab === 'batch') renderBatchSuite();
+                });
+
+                // Notation switcher (T/F, 1/0, B/S)
+                document.querySelectorAll('.notation-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        state.notation = btn.getAttribute('data-notation');
+                        document.querySelectorAll('.notation-btn').forEach(b => {
+                            if (b.getAttribute('data-notation') === state.notation) {
+                                b.className = 'notation-btn px-2 py-1 rounded-md font-medium bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 shadow-sm';
+                            } else {
+                                b.className = 'notation-btn px-2 py-1 rounded-md font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200';
+                            }
+                        });
+                        renderAll();
+                        if (state.activeTab === 'batch') renderBatchSuite();
+                    });
+                });
+
+                // Tab switching
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        switchTab(btn.getAttribute('data-tab'));
+                    });
+                });
+
+                // Filter buttons
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        state.rowFilter = btn.getAttribute('data-filter');
+                        document.querySelectorAll('.filter-btn').forEach(b => {
+                            if (b.getAttribute('data-filter') === state.rowFilter) {
+                                b.className = 'filter-btn px-2.5 py-1 rounded-md font-medium bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900';
+                            } else {
+                                b.className = 'filter-btn px-2.5 py-1 rounded-md font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200';
+                            }
+                        });
+                        if (state.lastAnalysis) renderTruthTable(state.lastAnalysis);
+                    });
+                });
+
+                // Table row click highlight delegation
+                document.getElementById('ttTbody').addEventListener('click', (e) => {
+                    const tr = e.target.closest('tr[data-row-idx]');
+                    if (!tr) return;
+                    const idx = Number(tr.getAttribute('data-row-idx'));
+                    if (state.highlightedRows.has(idx)) state.highlightedRows.delete(idx);
+                    else state.highlightedRows.add(idx);
+                    if (state.lastAnalysis) renderTruthTable(state.lastAnalysis);
+                });
+
+                // Batch suite load delegation
+                document.getElementById('batchCardsContainer').addEventListener('click', (e) => {
+                    const btn = e.target.closest('[data-load-expr]');
+                    if (!btn) return;
+                    inputEl.value = btn.getAttribute('data-load-expr');
+                    state.highlightedRows.clear();
+                    renderAll();
+                    switchTab('table');
+                    showToast('Ekspresi dimuat ke Tabel Kebenaran');
+                });
+
+                // Copy Markdown
+                document.getElementById('btnCopyMarkdown').addEventListener('click', () => {
+                    if (!state.lastAnalysis) return;
+                    const md = buildMarkdownTable(state.lastAnalysis);
+                    copyTextToClipboard(md, 'Tabel Markdown disalin ke clipboard');
+                });
+
+                // Export CSV
+                document.getElementById('btnExportCsv').addEventListener('click', () => {
+                    if (!state.lastAnalysis) return;
+                    downloadCsv(state.lastAnalysis);
+                });
+
+                // Theme Toggle
+                document.getElementById('btnThemeToggle').addEventListener('click', () => {
+                    document.documentElement.classList.toggle('dark');
+                    if (state.lastAnalysis) renderParserInspector(state.lastAnalysis);
+                });
+
+                // Initial render
+                renderAll();
+            });
+        })();
+    </script>
+</body>
+
+</html>
